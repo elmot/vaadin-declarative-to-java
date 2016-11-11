@@ -15,10 +15,19 @@
  */
 package org.vaadin.declarative;
 
+import org.junit.Assert;
 import org.junit.Test;
 
+import javax.tools.DiagnosticListener;
+import javax.tools.ForwardingJavaFileManager;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
+import java.io.StringWriter;
+import java.util.Collections;
 
 /**
  * TODO class description
@@ -26,10 +35,39 @@ import java.io.OutputStreamWriter;
  * @author Vaadin Ltd
  */
 public class TestConvert {
+
+    public static final String PACKAGE_NAME = "org.vaadin.example";
+    public static final String CLASS_NAME = "Example";
+
     @Test
-    public void unTest() throws Exception {
-        InputStream htmlSource = TestConvert.class.getResourceAsStream("testFile.html");
-        DesignToJavaConverter.convertDeclarativeToJava("org.vaadin.example","Example",
-                htmlSource, System.out);
+    public void testSimple() throws Exception {
+        unTest("testFile.html");
     }
+
+    @Test
+    public void testGrid() throws Exception {
+        unTest("TestTest.html");
+    }
+    public void unTest(String name) throws Exception {
+        InputStream htmlSource = TestConvert.class.getResourceAsStream(name);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DesignToJavaConverter.convertDeclarativeToJava(PACKAGE_NAME, CLASS_NAME,
+                htmlSource, baos);
+        System.out.write(baos.toByteArray());
+
+        JavaCompiler systemJavaCompiler = ToolProvider.getSystemJavaCompiler();
+        DiagnosticListener<JavaFileObject> javaFileObjectDiagnosticListener = diagnostic -> System.out.println("diagnostic = " + diagnostic);
+        StandardJavaFileManager standardFileManager = systemJavaCompiler.getStandardFileManager(javaFileObjectDiagnosticListener, null, null);
+
+        StringWriter compilerLog = new StringWriter();
+
+        JavaFileObject fileObject = new ReadOnlyJavaFileObject(baos);
+
+        ForwardingJavaFileManager<StandardJavaFileManager> fileManager = new NoSourceJavaFileManager(standardFileManager);
+
+        JavaCompiler.CompilationTask task = systemJavaCompiler.getTask(compilerLog, fileManager, javaFileObjectDiagnosticListener, null, null, Collections.singleton(fileObject));
+
+        Assert.assertTrue(task.call());
+    }
+
 }

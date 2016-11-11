@@ -15,34 +15,18 @@
  */
 package org.vaadin.declarative;
 
+import com.sun.codemodel.CodeWriter;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JMethod;
-import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
-import com.sun.codemodel.JType;
-import com.sun.codemodel.JVar;
-import com.sun.codemodel.writer.SingleStreamCodeWriter;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.declarative.Design;
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtConstructor;
-import javassist.Loader;
-import javassist.NotFoundException;
-import javassist.Translator;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * TODO class description
@@ -52,82 +36,35 @@ import java.util.Set;
 public class DesignToJavaConverter {
 
 
-    private static JMethod init;
-    private static Map<Object, JVar> variables;
-    private static Set<String> usedNames;
-    private static JCodeModel jCodeModel;
-
     public static void convertDeclarativeToJava(String packageName,
                                                 String className,
                                                 InputStream input, OutputStream output) throws Exception {
 
-        final ClassPool classPool = ClassPool.getDefault();
-        final Loader loader = new Loader(classPool);
-
-        loader.addTranslator(classPool, new MyTranslator(loader));
-
-        Method doConvertDeclarativeToJava = loader.loadClass(DesignToJavaConverter.class.getName())
-                .getDeclaredMethod("doConvertDeclarativeToJava"
-                        , String.class, String.class, InputStream.class, OutputStream.class);
-        doConvertDeclarativeToJava.invoke(null, packageName, className, input, output);
-    }
-
-    public static void doConvertDeclarativeToJava(String packageName,
-                                                  String className,
-                                                  InputStream input, OutputStream output) throws Exception {
-
-        variables = new IdentityHashMap<>();
-        usedNames = new HashSet<>();
-        jCodeModel = new JCodeModel();
-
+        JCodeModel jCodeModel = new JCodeModel();
         JPackage jPackage = jCodeModel._package(packageName);
         JDefinedClass declarativeClass = jPackage._class(className);
         declarativeClass._extends(Panel.class);
-        init = declarativeClass.method(JMod.PUBLIC, Void.TYPE, "init");
-
+        JMethod init = declarativeClass.method(Modifier.PUBLIC + Modifier.STATIC,void.class,"init");
+        Design.setComponentFactory(new SpyComponentFactory(jCodeModel,init.body()));
         Design.read(input);
-
-        jCodeModel.build(new SingleStreamCodeWriter(output));
+        jCodeModel.build(new MyCodeWriter(output));
     }
 
-    private static class MyTranslator implements Translator {
+    private static class MyCodeWriter extends CodeWriter {
+        private final OutputStream output;
 
-        private final Loader loader;
-        private CtClass componentClass;
-
-        public MyTranslator(Loader loader) {
-            this.loader = loader;
+        public MyCodeWriter(OutputStream output) {
+            this.output = output;
         }
 
-        public void start(ClassPool pool) throws NotFoundException, CannotCompileException {
-            componentClass = pool.get(Component.class.getName());
+        @Override
+        public OutputStream openBinary(JPackage pkg, String fileName) throws IOException {
+            return output;
         }
 
-        public void onLoad(ClassPool pool, String classname) throws NotFoundException, CannotCompileException {
-            CtClass ctClass = pool.get(classname);
-            if (!ctClass.isInterface() && ctClass.subtypeOf(componentClass) && (ctClass.getModifiers() & Modifier.ABSTRACT) == 0) {
-                try {
-                    CtConstructor declaredConstructor = ctClass.getDeclaredConstructor(null);
-                    declaredConstructor.insertBeforeBody(
-                            DesignToJavaConverter.class.getName() + ".registerInstance(" + ctClass.getName() + ".class, this);"
-                    );
-                } catch (NotFoundException ignored) {
-                }
-            }
-        }
-    }
+        @Override
+        public void close() throws IOException {
 
-    public static void registerInstance(Class declaredClass, Object obj) {
-        if (declaredClass.equals(obj.getClass())) {
-            String name = declaredClass.getSimpleName();
-            name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
-            int i = 1;
-            for (; usedNames.contains(name + i); i++) ;
-            name = name + i;
-            usedNames.add(name);
-            JType jType = jCodeModel._ref(declaredClass);
-
-            init.body().decl(jType, name, JExpr._new(jType));
         }
     }
 }
