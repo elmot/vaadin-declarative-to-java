@@ -172,12 +172,16 @@ public class SpyComponentFactory implements Design.ComponentFactory {
                     if (Modifier.isPublic(method.getModifiers())) {
                         JVar jVar = variables.get(obj);
                         JInvocation invoke = jVar.invoke(name);
-                        body.add(invoke);
-                        makeParams(method.getParameters(), args, invoke::arg);
+                        try {
+                            makeParams(method.getParameters(), args, invoke::arg);
+                            body.add(invoke);
+                        } catch (SkipCodePartException ignored) {
+                        }
                         skipLogging = true;
 
                     } else {
-                        new RuntimeException("Warning! non-public method call detected").printStackTrace();
+                        System.err.println("Warning! non-public method call detected");
+                        printExceptionCodePoint();
                     }
                 }
             }
@@ -189,12 +193,15 @@ public class SpyComponentFactory implements Design.ComponentFactory {
         }
     }
 
-    private void makeParams(Parameter[] parameters, Object[] args, Consumer<JExpression> expr) {
+    private void makeParams(Parameter[] parameters, Object[] args, Consumer<JExpression> expr)
+            throws SkipCodePartException {
         for (int i = 0; i < args.length; i++) {
             Object arg = args[i];
-            Class<?> argType = arg.getClass();
+            Class<?> argType = arg == null ? null : arg.getClass();
             JVar varRef = variables.get(arg);
-            if (varRef != null) {
+            if (arg == null) {
+                expr.accept(JExpr._null());
+            } else if (varRef != null) {
                 expr.accept(varRef);
             } else if (argType.isEnum()) {
                 expr.accept(((JClass) jCodeModel._ref(argType)).staticRef(((Enum) arg).name()));
@@ -211,10 +218,22 @@ public class SpyComponentFactory implements Design.ComponentFactory {
                 if (paramWorker != null) {
                     paramWorker.accept(expr, arg);
                 } else {
-                    System.err.println("Unsupported class " + argType);
-                    new RuntimeException().printStackTrace();
-                    expr.accept(JExpr._null());
+                    System.err.println("Warning! Unsupported class " + argType);
+                    printExceptionCodePoint();
+                    throw new SkipCodePartException();
                 }
+            }
+        }
+    }
+
+    private void printExceptionCodePoint() {
+        RuntimeException runtimeException = new RuntimeException();
+        StackTraceElement[] stackTrace = runtimeException.getStackTrace();
+        for (StackTraceElement stackTraceElement : stackTrace) {
+            String className = stackTraceElement.getClassName();
+            if (className.startsWith("com.vaadin.ui") && stackTraceElement.getLineNumber() > 0) {
+                System.err.println("at " + stackTraceElement);
+                break;
             }
         }
     }
