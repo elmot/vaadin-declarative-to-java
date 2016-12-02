@@ -15,15 +15,7 @@
  */
 package org.vaadin.declarative;
 
-import com.sun.codemodel.JArray;
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JInvocation;
-import com.sun.codemodel.JType;
-import com.sun.codemodel.JVar;
+import com.sun.codemodel.*;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
@@ -114,13 +106,16 @@ public class SpyComponentFactory implements Design.ComponentFactory {
 
     private Map<String, Enhancer> enhancers = new HashMap<>();
     private final JBlock body;
+    private final JDefinedClass rootClass;
     private final JCodeModel jCodeModel;
 
-    private Map<Object, JVar> variables = new HashMap<>();
+    private Map<Object, JExpression> variables = new HashMap<>();
     private Set<String> usedNames = new HashSet<>();
     private boolean skipLogging = false;
+    private boolean expectRoot = true;
 
-    public SpyComponentFactory(JCodeModel jCodeModel, JBlock body) {
+    public SpyComponentFactory(JCodeModel jCodeModel, JDefinedClass rootClass, JBlock body) {
+        this.rootClass = rootClass;
         this.body = body;
         this.jCodeModel = jCodeModel;
         initHandlers();
@@ -143,16 +138,24 @@ public class SpyComponentFactory implements Design.ComponentFactory {
             try {
                 Component component = (Component) enhancer.create();
                 String baseName = aClass.getSimpleName();
-                baseName = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1);
-                int i = 1;
-                String name;
-                do {
-                    name = baseName + i++;
-                } while (usedNames.contains(name));
-                usedNames.add(name);
                 JType jType = jCodeModel._ref(aClass);
-                JVar decl = body.decl(jType, name, JExpr._new(jType));
-                variables.put(component, decl);
+                if (expectRoot) {
+                    expectRoot = false;
+                    variables.put(component,JExpr._this());
+                    if(rootClass._extends()==jCodeModel.ref(Object.class)) {
+                        rootClass._extends((JClass) jType);
+                    }
+                } else {
+                    baseName = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1);
+                    int i = 1;
+                    String name;
+                    do {
+                        name = baseName + i++;
+                    } while (usedNames.contains(name));
+                    usedNames.add(name);
+                    JVar decl = body.decl(jType, name, JExpr._new(jType));
+                    variables.put(component, decl);
+                }
                 return component;
             } finally {
                 skipLogging = oldSkipLogging;
@@ -170,7 +173,7 @@ public class SpyComponentFactory implements Design.ComponentFactory {
                 String name = method.getName();
                 if (name.startsWith("set") || name.startsWith("add")) {
                     if (Modifier.isPublic(method.getModifiers())) {
-                        JVar jVar = variables.get(obj);
+                        JExpression jVar = variables.get(obj);
                         JInvocation invoke = jVar.invoke(name);
                         try {
                             makeParams(method.getParameters(), args, invoke::arg);
@@ -198,7 +201,7 @@ public class SpyComponentFactory implements Design.ComponentFactory {
         for (int i = 0; i < args.length; i++) {
             Object arg = args[i];
             Class<?> argType = arg == null ? null : arg.getClass();
-            JVar varRef = variables.get(arg);
+            JExpression varRef = variables.get(arg);
             if (arg == null) {
                 expr.accept(JExpr._null());
             } else if (varRef != null) {

@@ -15,11 +15,7 @@
  */
 package org.vaadin.declarative;
 
-import com.sun.codemodel.CodeWriter;
-import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JMethod;
-import com.sun.codemodel.JPackage;
+import com.sun.codemodel.*;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.declarative.Design;
 
@@ -30,6 +26,9 @@ import java.lang.reflect.Modifier;
 
 /**
  * TODO class description
+ * TODO make this like utility
+ * TODO link fields to superclass
+ * TODO Grid special handling
  *
  * @author Vaadin Ltd
  */
@@ -38,14 +37,17 @@ public class DesignToJavaConverter {
 
     public static void convertDeclarativeToJava(String packageName,
                                                 String className,
+                                                String baseClassName,
                                                 InputStream input, OutputStream output) throws Exception {
 
         JCodeModel jCodeModel = new JCodeModel();
         JPackage jPackage = jCodeModel._package(packageName);
         JDefinedClass declarativeClass = jPackage._class(className);
-        declarativeClass._extends(Panel.class);
-        JMethod init = declarativeClass.method(Modifier.PUBLIC + Modifier.STATIC,void.class,"init");
-        Design.setComponentFactory(new SpyComponentFactory(jCodeModel,init.body()));
+        if (baseClassName != null) {
+            declarativeClass._extends(jCodeModel.directClass(baseClassName));
+        }
+        JMethod init = declarativeClass.method(Modifier.PUBLIC + Modifier.STATIC, void.class, "init");
+        Design.setComponentFactory(new SpyComponentFactory(jCodeModel, declarativeClass,init.body()));
         Design.read(input);
         jCodeModel.build(new MyCodeWriter(output));
     }

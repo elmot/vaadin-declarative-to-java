@@ -40,20 +40,18 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.NativeButton;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 
 public class Example
-    extends Panel
+    extends VerticalLayout
 {
 
 
     public final void init() {
-        VerticalLayout verticalLayout1 = new VerticalLayout();
-        verticalLayout1 .setWidth("500px");
-        verticalLayout1 .setMargin(new MarginInfo(false, false, false, false));
+        this.setWidth("500px");
+        this.setMargin(new MarginInfo(false, false, false, false));
         HorizontalLayout horizontalLayout1 = new HorizontalLayout();
         horizontalLayout1 .setMargin(new MarginInfo(false, false, false, false));
         Label label1 = new Label();
@@ -83,18 +81,18 @@ public class Example
         button1 .setCaption("Click me");
         horizontalLayout1 .addComponent(button1);
         horizontalLayout1 .setComponentAlignment(button1, Alignment.TOP_LEFT);
-        verticalLayout1 .addComponent(horizontalLayout1);
-        verticalLayout1 .setComponentAlignment(horizontalLayout1, Alignment.TOP_LEFT);
+        this.addComponent(horizontalLayout1);
+        this.setComponentAlignment(horizontalLayout1, Alignment.TOP_LEFT);
         TextField textField1 = new TextField();
         textField1 .setCaption("Text input");
-        verticalLayout1 .addComponent(textField1);
-        verticalLayout1 .setComponentAlignment(textField1, Alignment.TOP_LEFT);
+        this.addComponent(textField1);
+        this.setComponentAlignment(textField1, Alignment.TOP_LEFT);
         PasswordField passwordField1 = new PasswordField();
         passwordField1 .setCaption("Password field");
         passwordField1 .setWidth("300px");
         passwordField1 .setHeight("200px");
-        verticalLayout1 .addComponent(passwordField1);
-        verticalLayout1 .setComponentAlignment(passwordField1, Alignment.TOP_LEFT);
+        this.addComponent(passwordField1);
+        this.setComponentAlignment(passwordField1, Alignment.TOP_LEFT);
     }
 
 }

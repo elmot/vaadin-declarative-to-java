@@ -41,17 +41,18 @@ public class TestConvert {
 
     @Test
     public void testSimple() throws Exception {
-        unTest("testFile.html");
+        unTest("testFile.html",null);
     }
 
     @Test
     public void testGrid() throws Exception {
-        unTest("TestTest.html");
+        unTest("TestTest.html","org.vaadin.declarative.TestTest");
     }
-    public void unTest(String name) throws Exception {
+
+    public void unTest(String name, String baseClass) throws Exception {
         InputStream htmlSource = TestConvert.class.getResourceAsStream(name);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DesignToJavaConverter.convertDeclarativeToJava(PACKAGE_NAME, CLASS_NAME,
+        DesignToJavaConverter.convertDeclarativeToJava(PACKAGE_NAME, CLASS_NAME, baseClass,
                 htmlSource, baos);
         System.out.write(baos.toByteArray());
 
