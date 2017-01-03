@@ -16,6 +16,7 @@
 package org.vaadin.declarative;
 
 import com.sun.codemodel.*;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.declarative.Design;
 
@@ -23,12 +24,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Modifier;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * TODO class description
  * TODO make this like utility
  * TODO link fields to superclass
  * TODO Grid special handling
+ * TODO try dateField
  *
  * @author Vaadin Ltd
  */
@@ -38,18 +43,38 @@ public class DesignToJavaConverter {
     public static void convertDeclarativeToJava(String packageName,
                                                 String className,
                                                 String baseClassName,
-                                                InputStream input, OutputStream output) throws Exception {
+                                                String baseClassText,
+                                                InputStream inputHtml, OutputStream output) throws Exception {
 
         JCodeModel jCodeModel = new JCodeModel();
         JPackage jPackage = jCodeModel._package(packageName);
         JDefinedClass declarativeClass = jPackage._class(className);
+        Component rootComponent = null;
+        if(baseClassText!=null)
+        {
+            Map<String,String> fields = collectFields(baseClassText);
+            rootComponent = createComponent(fields);
+        }
         if (baseClassName != null) {
             declarativeClass._extends(jCodeModel.directClass(baseClassName));
         }
         JMethod init = declarativeClass.method(Modifier.PUBLIC + Modifier.STATIC, void.class, "init");
         Design.setComponentFactory(new SpyComponentFactory(jCodeModel, declarativeClass,init.body()));
-        Design.read(input);
+        Design.read(inputHtml, rootComponent);
         jCodeModel.build(new MyCodeWriter(output));
+    }
+
+    private static Component createComponent(Map<String, String> fields) {
+        return null;//todo
+    }
+
+    private static Map<String, String> collectFields(String baseClassText) {
+        Pattern pattern = Pattern.compile(".*\\{(\\s+protected\\s+[^\\s]+\\s+([^\\s;]+)\\s*;)*.*", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(baseClassText);
+        while (matcher.find()) {
+            System.out.println("matcher.group(2) = " + matcher.group(2));
+        }
+        return null;
     }
 
     private static class MyCodeWriter extends CodeWriter {

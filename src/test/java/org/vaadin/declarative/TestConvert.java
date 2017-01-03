@@ -15,6 +15,7 @@
  */
 package org.vaadin.declarative;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,9 +25,8 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 /**
@@ -38,6 +38,7 @@ public class TestConvert {
 
     public static final String PACKAGE_NAME = "org.vaadin.example";
     public static final String CLASS_NAME = "Example";
+    private static String srcPrefix ="src"+ File.separator + "main"+ File.separator + "java"+ File.separator ;
 
     @Test
     public void testSimple() throws Exception {
@@ -52,7 +53,12 @@ public class TestConvert {
     public void unTest(String name, String baseClass) throws Exception {
         InputStream htmlSource = TestConvert.class.getResourceAsStream(name);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DesignToJavaConverter.convertDeclarativeToJava(PACKAGE_NAME, CLASS_NAME, baseClass,
+        String baseClassText = null;
+        if(baseClass!=null) {
+            String classFileName = srcPrefix + baseClass.replace('.', File.separatorChar) +".java";
+            baseClassText = FileUtils.readFileToString(new File(classFileName), StandardCharsets.UTF_8);
+        }
+        DesignToJavaConverter.convertDeclarativeToJava(PACKAGE_NAME, CLASS_NAME, baseClass, baseClassText,
                 htmlSource, baos);
         System.out.write(baos.toByteArray());
 
