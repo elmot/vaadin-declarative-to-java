@@ -31,9 +31,9 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * TODO class description
+ * Source file object
  *
- * @author Vaadin Ltd
+ * @author https://github.com/elmot
  */
 class ReadOnlyJavaFileObject implements JavaFileObject {
     private final ByteArrayOutputStream baos;

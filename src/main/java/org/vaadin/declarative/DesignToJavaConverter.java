@@ -22,10 +22,11 @@ import java.io.*;
 import java.lang.reflect.Modifier;
 
 /**
+ * @author https://github.com/elmot
+ */
+/*
  * TODO link fields to superclass
  * TODO Grid special handling
- *
- * @author Vaadin Ltd
  */
 public class DesignToJavaConverter {
 

@@ -24,9 +24,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * TODO class description
+ * JavaFileManager without source classes
  *
- * @author Vaadin Ltd
+ * @author https://github.com/elmot
  */
 class NoSourceJavaFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
 

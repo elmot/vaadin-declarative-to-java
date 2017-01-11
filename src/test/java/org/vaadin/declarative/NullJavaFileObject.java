@@ -26,9 +26,9 @@ import java.io.Writer;
 import java.net.URI;
 
 /**
- * TODO class description
+ * Dummy file object, like /dev/null
  *
- * @author Vaadin Ltd
+ * @author https://github.com/elmot
  */
 class NullJavaFileObject implements JavaFileObject {
     private final Kind kind;

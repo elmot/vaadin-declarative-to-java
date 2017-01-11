@@ -37,9 +37,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * TODO class description
+ * Generates instrumented components to store java sources
  *
- * @author Vaadin Ltd
+ * @author https://github.com/elmot
  */
 public class SpyComponentFactory implements Design.ComponentFactory {
 

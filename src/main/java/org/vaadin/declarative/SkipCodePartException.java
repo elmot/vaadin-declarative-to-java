@@ -18,7 +18,7 @@ package org.vaadin.declarative;
 /**
  * Thrown if something is not writable to java code.
  *
- * @author Vaadin Ltd
+ * @author https://github.com/elmot
  */
 public class SkipCodePartException extends Exception{
 }

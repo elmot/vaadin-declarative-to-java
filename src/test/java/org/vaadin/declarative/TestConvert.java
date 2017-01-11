@@ -30,9 +30,8 @@ import java.io.StringWriter;
 import java.util.Collections;
 
 /**
- * TODO class description
  *
- * @author Vaadin Ltd
+ * @author https://github.com/elmot
  */
 public class TestConvert {
 
