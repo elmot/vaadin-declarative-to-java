@@ -16,17 +16,12 @@
 package org.vaadin.declarative;
 
 import com.sun.codemodel.*;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.declarative.Design;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Modifier;
 
 /**
- * TODO class description
- * TODO make this like utility
  * TODO link fields to superclass
  * TODO Grid special handling
  *
@@ -34,6 +29,51 @@ import java.lang.reflect.Modifier;
  */
 public class DesignToJavaConverter {
 
+
+    public static void main(String[] args) throws Exception {
+        if (args.length == 0 || args.length % 2 == 1) {
+            printUsageAndExit();
+        }
+        String packageName = "";
+        String className = "Example";
+        String baseClassName = null;
+        InputStream input = System.in;
+        OutputStream output = System.out;
+
+        for (int i = 0; i < args.length; i += 2) {
+            switch (args[i]) {
+                case "-p":
+                    packageName = args[i + 1];
+                    break;
+                case "-c":
+                    className = args[i + 1];
+                    break;
+                case "-b":
+                    baseClassName = args[i + 1];
+                    break;
+                case "-s":
+                    input = new BufferedInputStream(new FileInputStream(args[i + 1]));
+                    break;
+                case "-o":
+                    output = new BufferedOutputStream(new FileOutputStream(args[i + 1]));
+                    break;
+                default:
+                    printUsageAndExit();
+            }
+        }
+        convertDeclarativeToJava(packageName, className, baseClassName, input, output);
+    }
+
+    private static void printUsageAndExit() {
+        System.out.println("Usage:");
+        System.out.println("    java " + DesignToJavaConverter.class.getName() + " <options>");
+        System.out.println("Options:");
+        System.out.println("    -p packageName");
+        System.out.println("    -c className");
+        System.out.println("    -b baseClassName");
+        System.out.println("    -s sourceFilePath");
+        System.exit(1);
+    }
 
     public static void convertDeclarativeToJava(String packageName,
                                                 String className,
@@ -47,7 +87,7 @@ public class DesignToJavaConverter {
             declarativeClass._extends(jCodeModel.directClass(baseClassName));
         }
         JMethod init = declarativeClass.method(Modifier.PUBLIC + Modifier.STATIC, void.class, "init");
-        Design.setComponentFactory(new SpyComponentFactory(jCodeModel, declarativeClass,init.body()));
+        Design.setComponentFactory(new SpyComponentFactory(jCodeModel, declarativeClass, init.body()));
         Design.read(input);
         jCodeModel.build(new MyCodeWriter(output));
     }
