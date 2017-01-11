@@ -43,6 +43,7 @@ import java.util.function.Consumer;
  */
 public class SpyComponentFactory implements Design.ComponentFactory {
 
+    public static final ClassLoader CLASS_LOADER = DesignToJavaConverter.class.getClassLoader();
     private final Map<String, BiConsumer<Consumer<JExpression>, Object>> clazzPramHandlers = new HashMap<>();
 
     private final Map<Alignment, String> alignments = new HashMap<>();
@@ -124,7 +125,7 @@ public class SpyComponentFactory implements Design.ComponentFactory {
     @Override
     public Component createComponent(String fullyQualifiedClassName, DesignContext context) {
         try {
-            Class<? extends Component> aClass = DesignToJavaConverter.class.getClassLoader().loadClass(fullyQualifiedClassName).asSubclass(Component.class);
+            Class<? extends Component> aClass = CLASS_LOADER.loadClass(fullyQualifiedClassName).asSubclass(Component.class);
             Enhancer enhancer = enhancers.get(fullyQualifiedClassName);
             if (enhancer == null) {
                 enhancer = new Enhancer();
