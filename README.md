@@ -1,7 +1,7 @@
 Vaadin Declarative to pure Java Converter
 ===
 
-Some unfinished experiments with CGLIB and Vaadin 7. 
+Some unfinished experiments with CGLIB and Vaadin 7. Works also against Vaadin 8, thanks to @johannest for testing.
 
 Vaadin declarative code is read, then pure Vaadin java initialization is generated out from it.
 Not all the cases are covered, for instance, Grid does not work properly.
