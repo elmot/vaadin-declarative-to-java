@@ -99,3 +99,50 @@ public class Example
 
 ```
 
+How to use DesignToJavaConverter in your project
+===
+1. Include following dependencies in your pom.xml
+
+```xml
+	<dependency>
+		<groupId>com.sun.codemodel</groupId>
+		<artifactId>codemodel</artifactId>
+		<version>2.6</version>
+	</dependency>
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>4.12</version>
+	</dependency>
+
+	<dependency>
+		<groupId>cglib</groupId>
+		<artifactId>cglib-nodep</artifactId>
+		<version>2.2</version>
+	</dependency>
+```
+
+2. Also make sure that `javax.servlet-api` is available (provided scope is not enough)
+
+3. Add following Java files to your project:
+    
+    `DesignToJavaConverter.java`, 
+    `SkipCodePartException.java`, and
+    `SpyComponentFactory.java`
+
+4. If your design uses custom components, make sure that each custom component has a default constructor.
+
+5. Run `java declarative.DesignToJavaConverter -b base.package.name -s path/to/declarative/file/MyViewDesign.html`
+
+6. Take console output and create a new Java (e.g. `MyViewJava.java`) class corresponding your `MyViewDesign.java` class
+
+7. Clean up the Java class (`MyViewJava.java`)
+	- fix possible autowired thing
+	- check the warnings (e.g. "Warning! Unsupported class...") from console output and fix in the code if needed
+	- make sure both `MyViewJava.java` and `MyViewDesign.java` extend same (layout) class
+	- refactor the content
+	- fix numeric literals
+	- compare the class to your MyViewDesign.java class, and refactor appropriate local variables to fields
+	- create constructor where the generated init method is called
+
+8. Use `MyViewJava.java` instead of `MyViewDesign.java`
